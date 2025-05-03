@@ -1,5 +1,7 @@
 Github不能正常显示LaTeX格式公式，推荐使用Typora阅读。https://pan.xunlei.com/s/VONSf5lUM8w5fKDwGby5F8nzA1?pwd=bghe
 
+[toc]
+
 # 这是一个使用SINDy识别漂移工况非线性动力学的项目
 
 **在“state_and_control.xlsx”文件中，包含了时间序列“time”、控制序列和状态序列**
@@ -47,6 +49,17 @@ $$
 $$
 \delta_{fl} \leq 35 \textdegree.
 $$
+
+## 应不应该设置常数项？
+
+——可能**不应该**，这个在以下代码中设置：
+
+```
+optimizer = Lasso(..., fit_intercept=False)
+poly_lib = PolynomialLibrary(..., include_bias=False)
+```
+
+如果设置了常数项，即使状态量和控制量全为0，状态变化率也不为0，和实际不符。
 
 ## 需要注意的
 

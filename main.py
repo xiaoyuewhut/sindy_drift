@@ -74,8 +74,10 @@ class SINDyVisualizer:
 
     def train_model(self):
         """训练SINDy模型"""
-        optimizer = Lasso(alpha=self.alpha, max_iter=100000)
-        poly_lib = PolynomialLibrary(degree=self.degree)
+        optimizer = Lasso(alpha=self.alpha,
+                          fit_intercept=False,
+                          max_iter=100000)
+        poly_lib = PolynomialLibrary(degree=self.degree, include_bias=False)
         # 可选其他库：FourierLibrary, CustomLibrary
         lib = poly_lib
 
