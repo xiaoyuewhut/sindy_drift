@@ -21,7 +21,9 @@ class SINDyVisualizer:
         """
         # 读取数据
         self.df = pd.read_excel(data_path, engine='openpyxl')
-
+        self.time_col = time_col
+        self.state_cols = state_cols
+        self.control_cols = control_cols
         # 提取原始数据
         self.t = self.df[time_col].values
         self.X = self.df[state_cols].values
@@ -37,7 +39,7 @@ class SINDyVisualizer:
 
         # 预处理配置
         self.alpha = 0.001  # Lasso正则化系数
-        self.degree = 2     # 多项式库阶数
+        self.degree = 3     # 多项式库阶数
 
         # 初始化模型和数据分割容器
         self.model = None
@@ -121,6 +123,48 @@ class SINDyVisualizer:
 
         plt.tight_layout()
         plt.suptitle('Derivative Comparison: Train vs Test', y=1.02)
+        plt.savefig('result.png')
+        plt.show()
+
+    def plot_xdot(self, figsize=(7, 8), marker_size=4, file_path=None):
+        """在指定数据集或测试集上绘制预测导数及真实导数"""
+
+        if self.model is None:
+            raise ValueError("请先调用 train_model() 方法训练模型")
+
+    # 加载新数据或使用测试集
+        if file_path:
+            data2 = pd.read_excel(file_path, engine='openpyxl')
+            t2 = data2[self.time_col].values
+            X = data2[self.state_cols].values
+            U = data2[self.control_cols].values
+        # 计算真实导数
+            dt2 = np.mean(np.diff(t2))
+            X_dot_true = np.gradient(X, dt2, axis=0)
+            idx = np.arange(len(t2))
+        else:
+            X = self.X_test
+            U = self.U_test
+            X_dot_true = self.X_dot_test
+            idx = np.arange(X.shape[0])
+
+        # 预测导数
+        X_dot_pred = self.model.predict(X, u=U)
+
+        n_states = X.shape[1]
+        plt.figure(figsize=figsize)
+        for i in range(n_states):
+            plt.subplot(n_states, 1, i + 1)
+            # 真实值
+            plt.scatter(idx, X_dot_true[:, i], s=marker_size, label='True', alpha=0.6)
+            # 预测值
+            plt.scatter(idx, X_dot_pred[:, i], s=marker_size, label='Predicted', alpha=0.6)
+            plt.ylabel(f"d{self.ylabel_list[i]}/dt")
+            plt.legend()
+            if i == n_states - 1:
+                plt.xlabel('Sample Index')
+
+        plt.tight_layout()
         plt.show()
 
     def show_model(self):
@@ -145,3 +189,4 @@ if __name__ == "__main__":
     visualizer.show_model()
     # 可通过 marker_size 参数调整点大小
     visualizer.plot_xdot_comparison(marker_size=5)
+    visualizer.plot_xdot(file_path="state_and_control2.xlsx")
