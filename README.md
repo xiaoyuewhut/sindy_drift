@@ -2,7 +2,7 @@
 
 **在“state_and_control.xlsx”文件中，包含了时间序列“time”、控制序列和状态序列**
 
-## 状态序列$\text{X(t)}$
+## 状态序列$\text{X(t)}$.
 
 $$
 \text{X}(t) = [\beta(t), \omega(t), V(t)]
@@ -22,7 +22,7 @@ $$
 
 *实际输入到车辆时需转换为单个车轮的控制量，举例：*
 $$
-T_{xfl} = \frac{F_{xf}}{2} \cdot r
+T_{xfl} = \frac{F_{xf}}{2} \cdot r.
 $$
 
 $$
@@ -31,7 +31,6 @@ $$
 
 *以及需要满足最大控制量约束*：
 $$
-\delta_{fl} \leq 35 \textdegree
+\delta_{fl} \leq 35 \textdegree.
 $$
-
 
