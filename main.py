@@ -88,81 +88,59 @@ class SINDyVisualizer:
         dt = np.mean(np.diff(self.t))
         self.model.fit(self.X_train, t=dt, u=self.U_train, x_dot=self.X_dot_train)
 
-    def plot_xdot_comparison(self, figsize=(14, 6), marker_size=5):
-        """绘制训练集和测试集的x_dot真实值与预测值对比"""
+    def plot_xdot(self, figsize=(14, 8), marker_size=5, file_path=None):
+        """合并训练集与新数据集的导数对比图：左侧为训练集，右侧为file_path指定数据"""
         if self.model is None:
             raise ValueError("请先调用 train_model() 方法训练模型")
 
-        # 预测训练和测试导数
-        xdot_train_pred = self.model.predict(self.X_train, u=self.U_train)
-        xdot_test_pred = self.model.predict(self.X_test, u=self.U_test)
+        # 准备训练集数据
+        X_train = self.X_train
+        U_train = self.U_train
+        X_dot_train = self.X_dot_train
+        idx_train = np.arange(X_train.shape[0])
 
-        n_states = self.X.shape[1]
-        plt.figure(figsize=figsize)
-        for i in range(n_states):
-            # 左侧：训练集
-            plt.subplot(n_states, 2, 2*i + 1)
-            plt.scatter(self.idx_train, self.X_dot_train[:, i], s=marker_size, label='True train', alpha=0.6)
-            plt.scatter(self.idx_train, xdot_train_pred[:, i], s=marker_size, label='Pred train', alpha=0.6)
-            plt.ylabel(f"d{self.ylabel_list[i]}/dt")
-            if i == 0:
-                plt.title('Training Set')
-            if i == n_states - 1:
-                plt.xlabel('Sample Index')
-            plt.legend()
-
-            # 右侧：测试集
-            plt.subplot(n_states, 2, 2*i + 2)
-            plt.scatter(self.idx_test, self.X_dot_test[:, i], s=marker_size, label='True test', alpha=0.6)
-            plt.scatter(self.idx_test, xdot_test_pred[:, i], s=marker_size, label='Pred test', alpha=0.6)
-            if i == 0:
-                plt.title('Test Set')
-            if i == n_states - 1:
-                plt.xlabel('Sample Index')
-            plt.legend()
-
-        plt.tight_layout()
-        plt.suptitle('Derivative Comparison: Train vs Test', y=1.02)
-        plt.savefig('result.png')
-        plt.show()
-
-    def plot_xdot(self, figsize=(7, 8), marker_size=4, file_path=None):
-        """在指定数据集或测试集上绘制预测导数及真实导数"""
-
-        if self.model is None:
-            raise ValueError("请先调用 train_model() 方法训练模型")
-
-    # 加载新数据或使用测试集
+        # 准备新数据集（file_path）
         if file_path:
             data2 = pd.read_excel(file_path, engine='openpyxl')
             t2 = data2[self.time_col].values
-            X = data2[self.state_cols].values
-            U = data2[self.control_cols].values
-        # 计算真实导数
+            X_new = data2[self.state_cols].values
+            U_new = data2[self.control_cols].values
             dt2 = np.mean(np.diff(t2))
-            X_dot_true = np.gradient(X, dt2, axis=0)
-            idx = np.arange(len(t2))
+            X_dot_new = np.gradient(X_new, dt2, axis=0)
+            idx_new = np.arange(X_new.shape[0])
         else:
-            X = self.X_test
-            U = self.U_test
-            X_dot_true = self.X_dot_test
-            idx = np.arange(X.shape[0])
+            X_new = self.X_test
+            U_new = self.U_test
+            X_dot_new = self.X_dot_test
+            idx_new = np.arange(X_new.shape[0])
 
         # 预测导数
-        X_dot_pred = self.model.predict(X, u=U)
+        X_dot_train_pred = self.model.predict(X_train, u=U_train)
+        X_dot_new_pred = self.model.predict(X_new, u=U_new)
 
-        n_states = X.shape[1]
+        n_states = X_train.shape[1]
         plt.figure(figsize=figsize)
         for i in range(n_states):
-            plt.subplot(n_states, 1, i + 1)
-            # 真实值
-            plt.scatter(idx, X_dot_true[:, i], s=marker_size, label='True', alpha=0.6)
-            # 预测值
-            plt.scatter(idx, X_dot_pred[:, i], s=marker_size, label='Predicted', alpha=0.6)
+            # 左侧：训练集
+            plt.subplot(n_states, 2, 2 * i + 1)
+            plt.scatter(idx_train, X_dot_train[:, i], s=marker_size, label='True Train', alpha=0.6)
+            plt.scatter(idx_train, X_dot_train_pred[:, i], s=marker_size, label='Pred Train', alpha=0.6)
+            if i == 0:
+                plt.title('Train Set')
             plt.ylabel(f"d{self.ylabel_list[i]}/dt")
-            plt.legend()
             if i == n_states - 1:
                 plt.xlabel('Sample Index')
+            plt.legend()
+
+            # 右侧：新数据集
+            plt.subplot(n_states, 2, 2 * i + 2)
+            plt.scatter(idx_new, X_dot_new[:, i], s=marker_size, label='True New', alpha=0.6)
+            plt.scatter(idx_new, X_dot_new_pred[:, i], s=marker_size, label='Pred New', alpha=0.6)
+            if i == 0:
+                plt.title('New Data')
+            if i == n_states - 1:
+                plt.xlabel('Sample Index')
+            plt.legend()
 
         plt.tight_layout()
         plt.show()
@@ -188,5 +166,4 @@ if __name__ == "__main__":
     visualizer.train_model()
     visualizer.show_model()
     # 可通过 marker_size 参数调整点大小
-    visualizer.plot_xdot_comparison(marker_size=5)
     visualizer.plot_xdot(file_path="state_and_control2.xlsx")
