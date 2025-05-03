@@ -1,8 +1,22 @@
+Github不能正常显示LaTeX格式公式，推荐使用Typora阅读。https://pan.xunlei.com/s/VONSf5lUM8w5fKDwGby5F8nzA1?pwd=bghe
+
 # 这是一个使用SINDy拟合非线性动力学的项目
 
 **在“state_and_control.xlsx”文件中，包含了时间序列“time”、控制序列和状态序列**
 
-## 状态序列$\text{X(t)}$.
+## 需要依赖项
+
+python == 3.10
+
+numpy == 1.24.4 （必须是这个版本）
+
+pysindy
+
+openyxl
+
+pandas
+
+## 状态序列$\text{X(t)}$
 
 $$
 \text{X}(t) = [\beta(t), \omega(t), V(t)]
@@ -22,7 +36,7 @@ $$
 
 *实际输入到车辆时需转换为单个车轮的控制量，举例：*
 $$
-T_{xfl} = \frac{F_{xf}}{2} \cdot r.
+T_{xfl} = \frac{F_{xf}}{2} \cdot r
 $$
 
 $$

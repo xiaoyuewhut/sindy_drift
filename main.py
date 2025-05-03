@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-from pysindy import SINDy, PolynomialLibrary
+from pysindy import SINDy
+from pysindy import PolynomialLibrary, FourierLibrary
 from sklearn.linear_model import Lasso
 from scipy.signal import savgol_filter
 
@@ -28,7 +29,7 @@ class SINDyVisualizer:
         self.window_length = 5  # 滤波窗口长度
         self.polyorder = 2  # 滤波多项式阶数
         self.alpha = 0.1  # Lasso正则化系数
-        self.degree = 2  # 多项式库阶数
+        self.degree = 2  # 多项式库阶数，（单纯用多项式拟合是不是有点。。。）
 
         # 初始化模型
         self.model = None
@@ -53,11 +54,13 @@ class SINDyVisualizer:
         """训练SINDy模型"""
         # 配置模型
         optimizer = Lasso(alpha=self.alpha, max_iter=10000)
-        feature_library = PolynomialLibrary(degree=self.degree)
+        poly_lib = PolynomialLibrary(degree=self.degree)  # 多项式
+        trig_lib = FourierLibrary(n_frequencies=3)
+        lib = poly_lib + trig_lib
 
         # 训练模型
         self.model = SINDy(optimizer=optimizer,
-                           feature_library=feature_library)
+                           feature_library=lib)
         self.model.fit(self.X, t=np.mean(np.diff(self.t)), u=self.U)
 
     def plot_combined_comparison(self, test_ratio=0.3, figsize=(10, 6)):
@@ -149,5 +152,5 @@ if __name__ == "__main__":
 
     # 绘制合并对比图和残差图
     visualizer.plot_combined_comparison()
-    visualizer.plot_residuals()
+    # visualizer.plot_residuals()
     plt.show()
