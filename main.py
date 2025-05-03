@@ -53,7 +53,7 @@ class SINDyVisualizer:
     def train_model(self):
         """训练SINDy模型"""
         # 配置模型
-        optimizer = Lasso(alpha=self.alpha, max_iter=10000)
+        optimizer = Lasso(alpha=self.alpha, max_iter=100000)
         poly_lib = PolynomialLibrary(degree=self.degree)  # 多项式
         trig_lib = FourierLibrary(n_frequencies=3)
         lib = poly_lib + trig_lib
@@ -61,54 +61,41 @@ class SINDyVisualizer:
         # 训练模型
         self.model = SINDy(optimizer=optimizer,
                            feature_library=lib)
-        self.model.fit(self.X, t=np.mean(np.diff(self.t)), u=self.U)
+        self.model.fit(self.X, t=np.mean(np.diff(self.t)), u=self.U, x_dot=self.X_dot)
 
-    def plot_combined_comparison(self, test_ratio=0.3, figsize=(10, 6)):
-        """合并绘制导数对比和长期轨迹预测对比（3行2列布局）"""
-        # 分割测试集
-        n_test = int(len(self.t) * test_ratio)
-        t_test = self.t[-n_test:]
-        X_test = self.X[-n_test:]
-        U_test = self.U[-n_test:]
-
-        # 计算预测的导数
+    def plot_combined_comparison(self, figsize=(10, 6)):
+        # Predict derivatives for all data
         X_dot_pred = self.model.predict(self.X, u=self.U)
+        dt = self.t[1] - self.t[0]
 
-        # 定义ODE函数用于轨迹预测
-        def sindy_ode(t, x):
-            idx = np.argmin(np.abs(t - t_test))
-            return self.model.predict(x.reshape(1, -1),
-                                      u=U_test[idx].reshape(1, -1))[0]
+        # One-step-ahead prediction using true state
+        n = len(self.t)
+        X_pred = np.zeros_like(self.X)
+        X_pred[0] = self.X[0]
+        for i in range(n - 1):
+            X_pred[i+1] = self.X[i] + X_dot_pred[i] * dt
 
-        # 数值积分获取预测轨迹
-        sol = solve_ivp(sindy_ode,
-                        [t_test[0], t_test[-1]],
-                        X_test[0],
-                        t_eval=t_test,
-                        rtol=1e-6)
-
-        # 创建画布和子图布局
+        # Plotting
         plt.figure(figsize=figsize)
         n_states = self.X.shape[1]
-
-        # 遍历每个状态变量绘制对比图
         for i in range(n_states):
-            # 导数对比子图（左）
-            plt.subplot(n_states, 2, 2*i+1)
-            plt.plot(self.t, self.X_dot[:, i], 'r--', linewidth=2, label='True')
-            plt.plot(self.t, X_dot_pred[:, i], 'b-', label='Predicted')
-            plt.ylabel(f'd{self.ylabel_list[i]}/dt')
+            # Derivative comparison (left)
+            plt.subplot(n_states, 2, 2*i + 1)
+            plt.plot(self.t, self.X_dot[:, i], 'r--', label='True derivative')
+            plt.plot(self.t, X_dot_pred[:, i], 'b-', label='Predicted derivative')
+            plt.ylabel(f"d{self.ylabel_list[i]}/dt")
             plt.legend()
 
-            # 轨迹对比子图（右）
-            plt.subplot(n_states, 2, 2*i+2)
-            plt.plot(t_test, X_test[:, i], 'r--', linewidth=2, label='True')
-            plt.plot(sol.t, sol.y[i], 'b-', label='Predicted')
-            plt.ylabel(f'{self.ylabel_list[i]}')
+            # One-step state prediction (right)
+            plt.subplot(n_states, 2, 2*i + 2)
+            plt.plot(self.t, self.X[:, i], 'r--', label='True state')
+            plt.plot(self.t, X_pred[:, i], 'b-', label='1-step prediction')
+            plt.ylabel(self.ylabel_list[i])
             plt.legend()
 
         plt.tight_layout()
-        plt.suptitle('Derivative and Trajectory Comparison', y=1.02)
+        plt.suptitle('Derivative and One-Step Prediction Comparison', y=1.02)
+        plt.xlabel('Time')
         plt.show()
 
     def plot_residuals(self, figsize=(8, 6)):
