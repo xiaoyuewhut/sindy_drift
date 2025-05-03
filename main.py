@@ -152,7 +152,6 @@ class SINDyVisualizer:
         self.model.print()
 
 
-# 使用示例 =====================================================
 if __name__ == "__main__":
     visualizer = SINDyVisualizer(
         data_path="state_and_control.xlsx",
