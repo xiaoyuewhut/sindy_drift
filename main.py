@@ -9,7 +9,7 @@ from scipy.signal import savgol_filter
 
 
 class SINDyVisualizer:
-    def __init__(self, data_path, state_cols, control_cols, time_col='t'):
+    def __init__(self, data_path, state_cols, control_cols, time_col='time'):
         """
         初始化SINDy
         :param data_path: Excel数据文件路径
@@ -26,9 +26,7 @@ class SINDyVisualizer:
         self.U = self.df[control_cols].values
 
         # 预处理配置
-        self.window_length = 5  # 滤波窗口长度
-        self.polyorder = 2  # 滤波多项式阶数
-        self.alpha = 0.1  # Lasso正则化系数
+        self.alpha = 0.001  # Lasso正则化系数
         self.degree = 2  # 多项式库阶数，（单纯用多项式拟合是不是有点。。。）
 
         # 初始化模型
@@ -40,12 +38,6 @@ class SINDyVisualizer:
 
     def preprocess_data(self):
         """数据预处理流程"""
-
-        # 数据平滑处理
-        # self.X = savgol_filter(self.X,
-        #                        window_length=self.window_length,
-        #                        polyorder=self.polyorder)
-
         # 简单计算数值导数
         dt = np.mean(np.diff(self.t))  # 其实是一定的离散间隔
         self.X_dot = np.gradient(self.X, dt, axis=0)

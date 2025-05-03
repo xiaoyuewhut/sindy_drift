@@ -1,6 +1,6 @@
 Github不能正常显示LaTeX格式公式，推荐使用Typora阅读。https://pan.xunlei.com/s/VONSf5lUM8w5fKDwGby5F8nzA1?pwd=bghe
 
-# 这是一个使用SINDy拟合非线性动力学的项目
+# 这是一个使用SINDy识别漂移工况非线性动力学的项目
 
 **在“state_and_control.xlsx”文件中，包含了时间序列“time”、控制序列和状态序列**
 
