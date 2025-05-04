@@ -1,18 +1,18 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import solve_ivp
 from pysindy import SINDy
 from pysindy import PolynomialLibrary, FourierLibrary, CustomLibrary
 from sklearn.linear_model import Lasso
-from sklearn.model_selection import train_test_split
 
 # 自定义的函数库
 def create_custom_functions():
 
     custom_functions = [
         lambda x: np.arctan(x),
-        # lambda x: np.exp(-x)
+        lambda x: x * np.arctan(x),
+        lambda x: x * np.sin(x),
+        lambda x: x * np.cos(x),
     ]
     return custom_functions
 
@@ -32,7 +32,7 @@ class SINDyVisualizer:
         self.U = self.df[control_cols].values
 
         # 模型与参数
-        self.alpha = 0.03
+        self.alpha = 0.01
         self.degree = 2
         self.n_frequency = 5
         self.model = None
