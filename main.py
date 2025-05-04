@@ -7,6 +7,14 @@ from pysindy import PolynomialLibrary, FourierLibrary, CustomLibrary
 from sklearn.linear_model import Lasso
 from sklearn.model_selection import train_test_split
 
+# 自定义的函数库
+def create_custom_functions():
+
+    custom_functions = [
+        lambda x: np.arctan(x),
+        # lambda x: np.exp(-x)
+    ]
+    return custom_functions
 
 class SINDyVisualizer:
     def __init__(self, data_path, state_cols, control_cols, time_col='time', random_state=None):
@@ -24,9 +32,9 @@ class SINDyVisualizer:
         self.U = self.df[control_cols].values
 
         # 模型与参数
-        self.alpha = 0.001
-        self.degree = 3
-        self.n_frequency = 3
+        self.alpha = 0.03
+        self.degree = 2
+        self.n_frequency = 5
         self.model = None
 
         # 计算全量真实导数
@@ -39,7 +47,11 @@ class SINDyVisualizer:
         optimizer = Lasso(alpha=self.alpha, fit_intercept=False, max_iter=100000)
         poly_lib = PolynomialLibrary(degree=self.degree, include_bias=False)
         trig_lib = FourierLibrary(n_frequencies=self.n_frequency)
-        lib = poly_lib + trig_lib
+        #
+        custom_functions = create_custom_functions()
+        cus_lib = CustomLibrary(library_functions=custom_functions)
+        # lib = poly_lib
+        lib = poly_lib + trig_lib + cus_lib
 
         self.model = SINDy(optimizer=optimizer, feature_library=lib)
         dt = np.mean(np.diff(self.t))
@@ -94,6 +106,7 @@ class SINDyVisualizer:
 
         plt.tight_layout()
         plt.show()
+
     def show_model(self):
         """打印并显示已识别的SINDy模型方程"""
         if self.model is None:
