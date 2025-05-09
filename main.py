@@ -105,6 +105,7 @@ class SINDyVisualizer:
             plt.legend()
 
         plt.tight_layout()
+        # plt.savefig("aa.png")
         plt.show()
 
     def show_model(self):
@@ -115,8 +116,13 @@ class SINDyVisualizer:
 
 
 if __name__ == "__main__":
+
+    train_file = "state_and_control.xlsx"
+    test_file = "state_and_control2.xlsx"
+
+
     visualizer = SINDyVisualizer(
-        data_path="state_and_control.xlsx",
+        data_path=train_file,
         state_cols=['beta', 'omega', 'v'],
         control_cols=['F_xf', 'F_xr', 'delta_f', 'delta_r'],
         time_col='time',
@@ -126,4 +132,4 @@ if __name__ == "__main__":
     visualizer.train_model()
     visualizer.show_model()
     # 可通过 marker_size 参数调整点大小
-    visualizer.plot_xdot(file_path="state_and_control2.xlsx")
+    visualizer.plot_xdot(file_path=test_file)
