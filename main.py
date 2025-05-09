@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from pysindy import SINDy
+import pysindy as ps
 from pysindy import PolynomialLibrary, FourierLibrary, CustomLibrary
 from sklearn.linear_model import Lasso
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import ElasticNet
 
 # 自定义的函数库
 def create_custom_functions():
@@ -32,33 +33,36 @@ class SINDyVisualizer:
         self.X = self.df[state_cols].values
         self.U = self.df[control_cols].values
 
-        # 归一化器
-        self.u_scaler = MinMaxScaler()
-        self.U = self.u_scaler.fit_transform(self.U)
-
-        # 模型与参数
-        self.alpha = 0.01
-        self.degree = 2
-        self.n_frequency = 5
-        self.model = None
-
         # 计算全量真实导数
         dt = np.mean(np.diff(self.t))
         self.X_dot = np.gradient(self.X, dt, axis=0)
         self.ylabel_list = state_cols
 
+        # 归一化器
+        self.u_scaler = MinMaxScaler()
+        self.x_scaler = MinMaxScaler()
+        self.U = self.u_scaler.fit_transform(self.U)
+        self.X = self.x_scaler.fit_transform(self.X)
+
+        # 模型与参数
+        self.degree = 3
+        self.n_frequency = 2
+        self.model = None
+
     def train_model(self):
         """使用全量数据训练SINDy模型"""
-        optimizer = Lasso(alpha=self.alpha, fit_intercept=False, max_iter=100000)
+        # optimizer = Lasso(alpha=0.005, fit_intercept=False, max_iter=1000000)
+        # optimizer = ps.STLSQ(threshold=0.15)
+        optimizer = ElasticNet(alpha=0.005, l1_ratio=0.9, fit_intercept=False)
         poly_lib = PolynomialLibrary(degree=self.degree, include_bias=False)
         trig_lib = FourierLibrary(n_frequencies=self.n_frequency)
         #
         custom_functions = create_custom_functions()
         cus_lib = CustomLibrary(library_functions=custom_functions)
-        # lib = poly_lib
+        lib = poly_lib
         lib = poly_lib + trig_lib + cus_lib
 
-        self.model = SINDy(optimizer=optimizer, feature_library=lib)
+        self.model = ps.SINDy(optimizer=optimizer, feature_library=lib)
         dt = np.mean(np.diff(self.t))
         self.model.fit(self.X, t=dt, u=self.U, x_dot=self.X_dot)
 
@@ -80,10 +84,11 @@ class SINDyVisualizer:
             t2 = data2[self.time_col].values
             X_new = data2[self.state_cols].values
             U_new = data2[self.control_cols].values
-            # 也归一化
-            U_new = self.u_scaler.transform(U_new)
             dt2 = np.mean(np.diff(t2))
             X_dot_new_true = np.gradient(X_new, dt2, axis=0)
+            # 也归一化
+            U_new = self.u_scaler.transform(U_new)
+            X_new = self.x_scaler.transform(X_new)
         else:
             X_new = self.X
             U_new = self.U
