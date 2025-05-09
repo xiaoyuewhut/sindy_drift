@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from pysindy import SINDy
 from pysindy import PolynomialLibrary, FourierLibrary, CustomLibrary
 from sklearn.linear_model import Lasso
+from sklearn.preprocessing import MinMaxScaler
 
 # 自定义的函数库
 def create_custom_functions():
@@ -30,6 +31,10 @@ class SINDyVisualizer:
         self.t = self.df[time_col].values
         self.X = self.df[state_cols].values
         self.U = self.df[control_cols].values
+
+        # 归一化器
+        self.u_scaler = MinMaxScaler()
+        self.U = self.u_scaler.fit_transform(self.U)
 
         # 模型与参数
         self.alpha = 0.01
@@ -75,6 +80,8 @@ class SINDyVisualizer:
             t2 = data2[self.time_col].values
             X_new = data2[self.state_cols].values
             U_new = data2[self.control_cols].values
+            # 也归一化
+            U_new = self.u_scaler.transform(U_new)
             dt2 = np.mean(np.diff(t2))
             X_dot_new_true = np.gradient(X_new, dt2, axis=0)
         else:
